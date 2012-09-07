@@ -1,0 +1,189 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="https://raw.github.com/LearnBoost/socket.io-client/master/dist/socket.io.js"></script>
+		<script>
+			var socket = io.connect('http://swell.io:3006');
+			socket.on('touch event', function (ev) {
+				console.log(JSON.stringify(ev));
+				ev_canvas(ev, true);
+			});
+			socket.on('next msg', function (ev) {
+				console.log("NEXT");
+				clear(true);
+			});
+			var login = function() {
+				document.getElementById('from').readOnly="readonly";
+				socket.emit("login", document.getElementById('from').value);
+			};
+			var target = function() {
+				return document.getElementById('to').value;
+			};
+		</script>
+	</head>
+	<body>
+		<style>
+			html {
+				overflow: hidden;
+			}
+			body {
+				overflow: hidden;
+			}
+			.cvs {
+				border: 1px solid #333;
+			}
+			#content {
+				position: absolute;
+				top: 0;
+				right: 0;
+				width: 300px;
+			}
+			#stream {
+				position: absolute;
+				top: 0;
+				left: 0;
+				height: 100%;
+				overflow: scroll;
+				width: 502px;
+			}
+		</style>
+		<div id="content">
+			<form id="loginform">
+				<input type="text" id="from" placeholder="From:"><br>
+				<input type="text" id="to" placeholder="To:"><br>
+				<input type="submit" id="connect" value="Connect">
+			</form>			
+			<input type="button" id="clear" value="Next »"><br><br>			
+		</div>
+		<div id="stream">
+			<canvas class="cvs" width="500" height="500"></canvas>
+		</div>
+		<script>			
+			var canvas, context, tool, cvsnum = 1;
+			var broadcast = function(type, payload) {
+				// websocket send
+			};
+			
+			function init(canvas) {
+				// Find the canvas element.
+				//canvas = document.getElementsByTagName('canvas')[0];
+				
+				if (!canvas) {
+				  alert('Error: I cannot find the canvas element!');
+				  return;
+				}
+				
+				if (!canvas.getContext) {
+				  alert('Error: no canvas.getContext!');
+				  return;
+				}
+				
+				// Get the 2D canvas context.
+				context = canvas.getContext('2d');
+				if (!context) {
+				  alert('Error: failed to getContext!');
+				  return;
+				}
+				
+				// Pencil tool instance.
+				tool = new tool_pencil();
+				
+				// Attach the mousedown, mousemove and mouseup event listeners.
+				canvas.addEventListener('mousedown', ev_canvas, false);
+				canvas.addEventListener('mousemove', ev_canvas, false);
+				canvas.addEventListener('mouseup',   ev_canvas, false);
+				
+				// Attach the equivalent touch screen event listeners.
+				canvas.addEventListener('touchstart', ev_canvas, false);
+				canvas.addEventListener('touchmove', ev_canvas, false);
+				canvas.addEventListener('touchend', ev_canvas, false);
+			};
+			init(canvas = document.getElementsByTagName("canvas")[0]);
+			
+			function tool_pencil() {
+				var tool = this;
+				this.started = false;
+				
+				var start = function (ev) {
+				    context.beginPath();
+				    context.moveTo(ev._x, ev._y);
+				    tool.started = true;
+				};
+				var move = function (ev) {
+					if (tool.started) {
+						context.lineTo(ev._x, ev._y);
+						context.stroke();
+					}
+				};
+				var end = function (ev) {
+					if (tool.started) {
+						//tool.mousemove(ev);
+						tool.started = false;
+					}
+				};
+				
+				this.mousedown = this.touchstart = start;				
+				this.mousemove = this.touchmove = move;				
+				this.mouseup = this.touchend = end;
+			}
+			
+			function ev_canvas (ev, mirroring) {
+				if (ev.layerX || ev.layerX == 0) { // Firefox
+				  ev._x = ev.layerX;
+				  ev._y = ev.layerY;
+				} else if (ev.offsetX || ev.offsetX == 0) { // Opera
+				  ev._x = ev.offsetX;
+				  ev._y = ev.offsetY;
+				}
+				
+				if( !mirroring && (tool.started || ev.type == "touchstart" || ev.type == "mousedown") ) {
+					// only transmit if a point should be drawn
+					socket.emit('touch event', [target(), { 
+						type: ev.type,
+						_x: ev._x, 
+						_y: ev._y
+					}]);
+				}
+				
+				var func = tool[ev.type];
+				if (func) {
+				  func(ev);
+				}
+			}	
+			
+			function clear(mirroring) {
+				//context.clearRect(0,0,500,500);
+				var cvs = document.createElement("canvas");
+				cvs.className = "cvs";
+				cvs.width = "500";
+				cvs.height = "500";
+				cvs.id = "cvs"+(++cvsnum);
+				document.getElementById('stream').appendChild(cvs);
+				
+				canvas = cvs;				
+				init(canvas);	
+				
+				location.hash = "#"+cvs.id;			
+				
+				if( !mirroring ) {
+					socket.emit('next msg', target());
+				}
+			}	
+			
+			// prevent scroll
+			document.body.addEventListener('touchmove', function(e){ e.preventDefault(); });
+			
+			document.getElementById('clear').addEventListener('click', function() {
+				clear();
+			}, false);
+			
+			document.getElementById('loginform').addEventListener('submit', function(e) {
+				e.preventDefault();
+				login();
+				document.getElementById('connect').value = "Connected √";
+			}, false);
+		</script>
+	</body>
+</html>
