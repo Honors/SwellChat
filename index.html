@@ -29,17 +29,11 @@
 	</head>
 	<body>
 		<style>
-			html {
-				overflow: hidden;
-			}
-			body {
-				overflow: hidden;
-			}
 			.cvs {
 				border: 1px solid #333;
 			}
 			#content {
-				position: absolute;
+				position: fixed;
 				top: 0;
 				right: 0;
 				width: 300px;
@@ -49,7 +43,6 @@
 				top: 0;
 				left: 0;
 				height: 100%;
-				overflow: scroll;
 				width: 502px;
 			}
 		</style>
@@ -65,7 +58,7 @@
 			<canvas class="cvs" width="500" height="500"></canvas>
 		</div>
 		<script>			
-			var canvas, context, tool, cvsnum = 1;
+			var canvas, context, tool;
 			
 			function init(canvas) {				
 				if (!canvas) {
@@ -103,15 +96,20 @@
 			function tool_pencil() {
 				var tool = this;
 				this.started = false;
-				
+							
+				var shiftFromTop = function() {
+					return canvas.offsetTop;
+				};
+								
 				var start = function (ev) {
 				    context.beginPath();
-				    context.moveTo(ev._x, ev._y);
+				    console.log(ev._y - shiftFromTop());
+				    context.moveTo(ev._x, ev._y - shiftFromTop());
 				    tool.started = true;
 				};
 				var move = function (ev) {
 					if (tool.started) {
-						context.lineTo(ev._x, ev._y);
+						context.lineTo(ev._x, ev._y - shiftFromTop());
 						context.stroke();
 					}
 				};
@@ -135,7 +133,6 @@
 				  ev._x = ev.offsetX;
 				  ev._y = ev.offsetY;
 				}
-				
 				if( !mirroring && (tool.started || ev.type == "touchstart" || ev.type == "mousedown") ) {
 					// only notify others of touch event if something needs to be drawn
 					socket.emit('touch event', [target(), { 
@@ -156,13 +153,12 @@
 				cvs.className = "cvs";
 				cvs.width = "500";
 				cvs.height = "500";
-				cvs.id = "cvs"+(++cvsnum);
 				document.getElementById('stream').appendChild(cvs);
 				
 				canvas = cvs;				
 				init(canvas);	
 				
-				location.hash = "#"+cvs.id;			
+				window.scrollTo(0, document.body.scrollHeight);
 				
 				if( !mirroring ) {
 					socket.emit('next msg', target());
