@@ -3,6 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Swell Chat</title>
+		<link rel="stylesheet" href="/style.css">
 		<script src="https://raw.github.com/LearnBoost/socket.io-client/master/dist/socket.io.js"></script>
 		<script>			
 			var socket = io.connect('http://swell.io:3006');
@@ -19,12 +20,12 @@
 			
 			// identify self to server
 			var login = function() {
-				document.getElementById('from').readOnly="readonly";
-				socket.emit('login', document.getElementById('from').value);
+				socket.emit('login', document.cookie.split('=')[1]);
 			};
 			var target = function() {
-				return document.getElementById('to').value;
+				return location.href.split('/').pop();
 			};
+			login();
 		</script>
 	</head>
 	<body>
@@ -32,30 +33,25 @@
 			.cvs {
 				border: 1px solid #333;
 			}
-			#content {
-				position: fixed;
-				top: 0;
-				right: 0;
-				width: 300px;
-			}
 			#stream {
-				position: absolute;
-				top: 0;
-				left: 0;
-				height: 100%;
-				width: 502px;
+				width: 100%;
+			}
+			.hide {
+				display: none;
 			}
 		</style>
-		<div id="content">
+		<div id="content">			
+			<div id="stream">
+				<canvas class="cvs" width="500" height="500"></canvas>
+			</div>
+		</div>		
+		<div class="hide">
 			<form id="loginform">
 				<input type="text" id="from" placeholder="From:"><br>
 				<input type="text" id="to" placeholder="To:"><br>
 				<input type="submit" id="connect" value="Connect">
 			</form>			
-			<input type="button" id="clear" value="Next »"><br><br>			
-		</div>
-		<div id="stream">
-			<canvas class="cvs" width="500" height="500"></canvas>
+			<input type="button" id="clear" value="Next »"><br><br>
 		</div>
 		<script>			
 			var canvas, context, tool;
@@ -98,18 +94,20 @@
 				this.started = false;
 							
 				var shiftFromTop = function() {
-					return canvas.offsetTop;
+					return canvas.offsetTop; // -22 for top padding on mac, not on pc
+				};
+				var shiftFromLeft = function() {
+					return 22; // for left padding and borders on pc, not on mac
 				};
 								
 				var start = function (ev) {
 				    context.beginPath();
-				    console.log(ev._y - shiftFromTop());
-				    context.moveTo(ev._x, ev._y - shiftFromTop());
+				    context.moveTo(ev._x - shiftFromLeft(), ev._y - shiftFromTop());
 				    tool.started = true;
 				};
 				var move = function (ev) {
 					if (tool.started) {
-						context.lineTo(ev._x, ev._y - shiftFromTop());
+						context.lineTo(ev._x - shiftFromLeft(), ev._y - shiftFromTop());
 						context.stroke();
 					}
 				};

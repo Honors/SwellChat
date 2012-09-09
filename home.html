@@ -1,0 +1,108 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<title>Login</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+		<div id="content">
+			<a id="logout" href="#logout"><span>|</span> logout</a>
+			<form action="" id="login">
+				<input type="text" id="username">
+				<input type="password" id="password">
+				<input type="submit" value="login">
+			</form>
+			<form action="" id="addUser">
+				<input type="text" id="addedUser">
+				<input type="submit" value="add">
+			</form>
+			<div id="friends">
+				<ul></ul>
+			</div>			
+		</div>
+		<script>
+			var userEl = function(username) {
+				var li = document.createElement('li');
+				var a = document.createElement('a');
+				a.href = "/chat/"+username;
+				a.innerText = username;
+				li.appendChild(a);
+				
+				return li;
+			};
+			var username = function() {
+				return document.getElementById('username').value;
+			};
+			var password = function() {
+				return document.getElementById('password').value;
+			};
+			var newFriend = function() {
+				return document.getElementById('addedUser').value;
+			};
+			var checkLogin = function(cbGood, cbBad) {
+				var xmlhttp = new XMLHttpRequest();
+				xmlhttp.onreadystatechange = function() {
+					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+						var valid = JSON.parse(xmlhttp.responseText).valid;
+						(valid?cbGood:cbBad)();	
+					}
+				}
+				xmlhttp.open("GET","/api/checkLogin/"+username()+"/"+password(),true);
+				xmlhttp.send();
+			};			
+			document.getElementById('login').addEventListener('submit', function(event) {
+				event.preventDefault();
+				checkLogin(function() {						
+					// display and hide elements							
+					document.getElementById('friends').style.display = 'block';
+					document.getElementById('addUser').style.display = 'block';
+					document.getElementById('logout').style.display = 'block';
+					document.getElementById('login').style.display = 'none';				
+					
+					// save login as cookie
+					document.cookie = "username="+username();
+					
+					// Fetch & Display friends from API
+					var xmlhttp = new XMLHttpRequest();
+					xmlhttp.onreadystatechange = function() {
+						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+							JSON.parse(xmlhttp.responseText).friends.map(function(friend) {
+								document.getElementById('friends').childNodes[1].appendChild(userEl(friend));
+							});
+						}
+					}
+					xmlhttp.open("GET","/api/getFriends/"+username(),true);
+					xmlhttp.send();
+				}, function() {
+					// Failed to Login...
+					document.getElementById('username').className += " wrong";
+					document.getElementById('password').className += " wrong";
+				});
+			}, false);
+			document.getElementById('login').addEventListener('keypress', function(event) {	
+				document.getElementById('username').className = document.getElementById('username').className.replace("wrong","");
+				document.getElementById('password').className = document.getElementById('password').className.replace("wrong","");
+			}, true);
+			document.getElementById('logout').addEventListener('click', function(event) {	
+				event.preventDefault();
+				
+				// remove login from cookie
+				document.cookie = "username=";
+				
+				// redirect
+				location = "/";
+			}, true);
+			document.getElementById('addUser').addEventListener('submit', function(event) {
+				event.preventDefault();		
+				
+				// Insert user		
+				document.getElementById('friends').childNodes[1].appendChild(userEl("matt"));
+				
+				// Update API endpoint
+				var xmlhttp = new XMLHttpRequest();				
+				xmlhttp.open("GET","/api/setFriends/"+username()+"/"+newFriend(),true);
+				xmlhttp.send();
+			}, false);
+		</script>
+	</body>
+</html>

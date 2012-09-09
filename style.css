@@ -1,0 +1,103 @@
+body {
+	padding: 0;
+	padding-top: 40px;
+	padding-bottom: 40px;
+	background: url(http://f.cl.ly/items/1C2k1d083j3m2e0l1r1C/grey.png);
+}
+#content {	
+	background: #fff;
+	box-shadow: inset 0px 1px 1px #444;
+	width: 500px;
+	padding: 20px;
+	border: 1px solid #e3e3e3;
+	position: relative;
+	margin: auto;
+	border-radius: 5px;
+}	
+form {
+	margin: 0;
+}		
+form input {
+	padding: 4px;
+	font-size: 23px;
+	border-radius: 3px;
+	border: 1px solid #333;
+	width: 200px;
+}
+form input[type=submit] {
+	width: 90px;	
+	color: #565656;
+	background: #e3e3e3;	
+}
+form input:focus {
+	outline: none;
+	border: 1px solid #2b02cf;
+}
+#friends {
+	width: 100%;
+	background: #e3e3e3;				
+	border: 1px solid #333;
+	border-radius: 3px;
+	margin-left: -2px;
+	margin-top: 10px;
+}
+#friends li {
+	list-style: none;
+	border-top: 1px solid #333;
+}
+#friends li:first-of-type {
+	border-top: none;
+}
+#friends ul {
+	padding: 0;
+	margin: 0;
+}
+#friends a {
+	text-decoration: none;
+	width: 100%;
+	display: block;
+	color: #565656;
+	font-family: sans-serif;
+	font-size: 18px;
+	letter-spacing: 1px;
+	box-sizing: border-box;
+	padding: 5px;
+}
+#addUser input[type=text] {
+	width: 405px;
+}
+#logout {
+	position: absolute;
+	top: -40px;
+	right: 0;
+	height: 20px;
+	text-decoration: none;
+	color: #333;
+	font-family: sans-serif;
+	font-size: 20px;
+}
+#logout span {				
+	background: url(http://twitter.github.com/bootstrap/assets/img/glyphicons-halflings.png);				
+	text-indent: -999px;
+	display: block;
+	float: left;
+	background-position: -384px 0;	/* -384px * 1 */
+	margin-top: 4px;
+	width: 20px;
+	height: 20px;
+	/*background-size: 439px;	/* 439px * 1 */				
+}
+
+/* Login mode */
+#friends {
+	display: none;
+}
+#addUser {
+	display: none;
+}
+#logout {
+	display: none;
+}
+.wrong, .wrong:focus {
+	border: 1px solid #e10505;
+}
